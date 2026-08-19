@@ -9,7 +9,6 @@ import {
   Minus,
   Building,
   Key,
-  Play,
   Volume2,
   VolumeX,
 } from "lucide-react";
@@ -155,7 +154,7 @@ export const HomePage = () => {
       {/* Snap Scroll Main Container */}
       <div
         ref={containerRef}
-        className="snap-main-container flex-1 bg-[#F9F8F6] dark:bg-[#0F0F0F] text-[#121212] dark:text-[#F9F8F6] transition-colors duration-300"
+        className="flex-1 h-dvh w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth [-webkit-overflow-scrolling:touch] bg-[#F9F8F6] dark:bg-[#0F0F0F] text-[#121212] dark:text-[#F9F8F6] transition-colors duration-300"
       >
         
         {/* ══════════════════════════════════════════════════
@@ -163,7 +162,7 @@ export const HomePage = () => {
         ══════════════════════════════════════════════════ */}
         <section
           id="hero"
-          className="snap-full-section px-6 sm:px-12 pt-28 pb-10"
+          className="snap-start snap-always h-dvh min-h-dvh w-full flex flex-col justify-center relative overflow-hidden px-6 sm:px-12 pt-28 pb-10"
         >
           <div className="max-w-[1400px] mx-auto w-full grid grid-cols-12 gap-8 items-center h-full">
             {/* Left Column — Text & Search */}
@@ -248,7 +247,7 @@ export const HomePage = () => {
         ══════════════════════════════════════════════════ */}
         <section
           id="portfolio"
-          className="snap-full-section px-6 sm:px-12 pt-28 pb-10"
+          className="snap-start snap-always h-dvh min-h-dvh w-full flex flex-col justify-center relative overflow-hidden px-6 sm:px-12 pt-28 pb-10"
         >
           <div className="max-w-[1400px] mx-auto w-full flex flex-col justify-between h-full">
             {/* Top Bar Header */}
@@ -313,7 +312,7 @@ export const HomePage = () => {
                   </div>
 
                   {/* Bottom Information Pills — REVEALS ONLY ON HOVER WITH FADE UP */}
-                  <div className="absolute bottom-6 left-6 right-6 z-20 info-pill-reveal">
+                  <div className="absolute bottom-6 left-6 right-6 z-20 opacity-0 translate-y-6 transition-[opacity,transform] duration-[400ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] group-hover:opacity-100 group-hover:translate-y-0">
                     <div className="flex flex-wrap gap-2 items-center">
                       <div className="px-4 py-2.5 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md text-zinc-900 dark:text-white shadow-xl flex flex-col justify-center border border-black/10 dark:border-white/10 hover:scale-105 transition-transform">
                         <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Mức giá</span>
@@ -359,7 +358,7 @@ export const HomePage = () => {
         ══════════════════════════════════════════════════ */}
         <section
           id="about"
-          className="snap-full-section px-12 pt-28 pb-10"
+          className="snap-start snap-always h-dvh min-h-dvh w-full flex flex-col justify-center relative overflow-hidden px-12 pt-28 pb-10"
         >
           <div className="max-w-[1400px] mx-auto w-full grid grid-cols-2 gap-12 items-center h-full">
             {/* Left Column — Text & Stat Numbers with POP Animations */}
@@ -387,21 +386,21 @@ export const HomePage = () => {
 
               {/* Huge Numbers Stats with Pop-Up / Scale Effects */}
               <div className="space-y-4 border-t border-black/10 dark:border-white/10 pt-6">
-                <div className="stat-number-pop cursor-pointer flex items-baseline justify-between gap-4 border-b border-black/5 dark:border-white/5 pb-3 group">
+                <div className="transition-[transform,color] duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:scale-[1.02] hover:translate-x-[4px] cursor-pointer flex items-baseline justify-between gap-4 border-b border-black/5 dark:border-white/5 pb-3 group">
                   <span className="text-5xl font-black tracking-tight text-zinc-900 dark:text-white group-hover:text-zinc-500 transition-colors">42+</span>
                   <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 text-right max-w-[220px]">
                     Giao Dịch Thành Công Mỗi Tháng
                   </span>
                 </div>
 
-                <div className="stat-number-pop cursor-pointer flex items-baseline justify-between gap-4 border-b border-black/5 dark:border-white/5 pb-3 group">
+                <div className="transition-[transform,color] duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:scale-[1.02] hover:translate-x-[4px] cursor-pointer flex items-baseline justify-between gap-4 border-b border-black/5 dark:border-white/5 pb-3 group">
                   <span className="text-5xl font-black tracking-tight text-zinc-900 dark:text-white group-hover:text-zinc-500 transition-colors">99.4%</span>
                   <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 text-right max-w-[220px]">
                     Tỷ Lệ Hài Lòng Từ Khách Hàng
                   </span>
                 </div>
 
-                <div className="stat-number-pop cursor-pointer flex items-baseline justify-between gap-4 group">
+                <div className="transition-[transform,color] duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:scale-[1.02] hover:translate-x-[4px] cursor-pointer flex items-baseline justify-between gap-4 group">
                   <span className="text-5xl font-black tracking-tight text-zinc-900 dark:text-white group-hover:text-zinc-500 transition-colors">210+</span>
                   <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 text-right max-w-[220px]">
                     Bất Động Sản Độc Quyền Sẵn Sàng Giao Dịch
@@ -452,7 +451,7 @@ export const HomePage = () => {
         ══════════════════════════════════════════════════ */}
         <section
           id="types"
-          className="snap-full-section px-6 sm:px-12 pt-28 pb-10"
+          className="snap-start snap-always h-dvh min-h-dvh w-full flex flex-col justify-center relative overflow-hidden px-6 sm:px-12 pt-28 pb-10"
         >
           <div className="max-w-[1400px] mx-auto w-full flex flex-col justify-between h-full">
             {/* Header */}
@@ -506,7 +505,7 @@ export const HomePage = () => {
         ══════════════════════════════════════════════════ */}
         <section
           id="faq"
-          className="snap-full-section px-6 sm:px-12 pt-28 pb-10"
+          className="snap-start snap-always h-dvh min-h-dvh w-full flex flex-col justify-center relative overflow-hidden px-6 sm:px-12 pt-28 pb-10"
         >
           <div className="max-w-[1400px] mx-auto w-full my-auto space-y-8">
             {/* Logo Partners Bar */}
@@ -573,7 +572,7 @@ export const HomePage = () => {
         ══════════════════════════════════════════════════ */}
         <section
           id="footer-section"
-          className="snap-full-section flex flex-col justify-center"
+          className="snap-start snap-always h-dvh min-h-dvh w-full flex flex-col justify-center relative overflow-hidden"
         >
           <Footer />
         </section>
