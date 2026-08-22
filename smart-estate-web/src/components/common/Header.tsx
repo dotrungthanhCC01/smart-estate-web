@@ -52,7 +52,7 @@ export const Header = ({ activeSection = "hero" }: HeaderProps) => {
         </Link>
 
         {/* Nav with Active Section Indicator */}
-        <nav className="flex items-center gap-1.5 p-1 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
+        <nav className="hidden md:flex items-center gap-1.5 p-1 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
           {navItems.map((item) => {
             const isActive = activeSection === item.id;
             return (
@@ -86,13 +86,13 @@ export const Header = ({ activeSection = "hero" }: HeaderProps) => {
 
           <Link
             to="/auth/login"
-            className="text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white px-3 py-2 transition-colors"
+            className="hidden sm:block text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white px-3 py-2 transition-colors"
           >
             Đăng nhập
           </Link>
           <Link
             to="/auth/register"
-            className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 px-5 py-2.5 rounded-full hover:bg-zinc-800 dark:hover:bg-zinc-100 shadow-sm transition-all hover:scale-105"
+            className="hidden sm:flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 px-5 py-2.5 rounded-full hover:bg-zinc-800 dark:hover:bg-zinc-100 shadow-sm transition-all hover:scale-105"
           >
             <span>Bắt đầu ngay</span>
             <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -106,7 +106,7 @@ export const Header = ({ activeSection = "hero" }: HeaderProps) => {
             className="w-8 h-8 rounded-full border border-black/10 dark:border-white/15 text-zinc-800 dark:text-zinc-200 flex items-center justify-center"
             aria-label="Toggle Theme"
           >
-            {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-zinc-700" />}
+            {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
           </button>
 
           <button

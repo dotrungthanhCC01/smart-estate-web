@@ -52,7 +52,7 @@ export const AuthLayout = () => {
           LEFT — Form Panel (45%)
       ════════════════════════════════════ */}
       <div className="w-[45%] shrink-0 flex flex-col items-center justify-start pt-[12vh] pb-10 px-14 bg-white dark:bg-[#121215] rounded-r-3xl shadow-[16px_0_48px_rgba(0,0,0,0.06)] dark:shadow-[16px_0_48px_rgba(0,0,0,0.7)] border-r border-[#EFECE6] dark:border-zinc-800/80 overflow-y-auto min-h-dvh relative z-10 transition-colors duration-300">
-        
+
         {/* Theme Toggle Button — Top Left */}
         <button
           onClick={toggleTheme}
@@ -72,12 +72,12 @@ export const AuthLayout = () => {
           RIGHT — Image Panel (55%)
       ════════════════════════════════════ */}
       <div className="relative flex-1 overflow-hidden bg-[#F9F8F6] dark:bg-[#0c0c0e] min-h-dvh transition-colors duration-300">
-
-        {/* Ambient background glow in dark mode */}
+        
+        {/* Ambient background glow */}
         <div className="absolute top-1/4 right-1/4 w-96 h-96 rounded-full bg-amber-500/10 dark:bg-indigo-500/15 blur-3xl pointer-events-none" />
 
-        {/* ── Image blob — border-0 outline-none overrides global border-border ── */}
-        <div className="absolute inset-6  rounded-[44px] overflow-hidden border-0 outline-none shadow-2xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.8)]">
+        {/* ── Image blob ── */}
+        <div className="absolute inset-6 rounded-[44px] overflow-hidden border-0 outline-none shadow-2xl dark:shadow-[0_20px_60px_rgba(0,0,0,0.8)]">
 
           {/* Property image */}
           <img
@@ -86,7 +86,50 @@ export const AuthLayout = () => {
             className="absolute inset-0 w-full h-full object-cover transition-all duration-700 dark:brightness-[0.82] dark:contrast-[1.12] dark:saturate-[1.1]"
           />
 
-          {/* Multi-stop atmospheric gradient */}
+          {/* ── Rich multi-stop gradient overlays ── */}
+          {/* Bottom strong dark gradient for card readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+          {/* Top subtle dark bar for logo + tagline readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-transparent pointer-events-none" />
+          {/* Left edge vignette */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-transparent pointer-events-none" />
+
+          {/* ── Bubble / dot cluster — TOP RIGHT corner ── */}
+          <div className="absolute top-20 right-6 z-10 pointer-events-none">
+            {/* Dot grid pattern */}
+            <svg width="90" height="90" viewBox="0 0 90 90" className="absolute -top-2 -right-2 opacity-50">
+              <pattern id="dot-tr" x="0" y="0" width="14" height="14" patternUnits="userSpaceOnUse">
+                <circle cx="3" cy="3" r="1.8" fill="rgba(255,255,255,0.55)" />
+              </pattern>
+              <rect width="90" height="90" fill="url(#dot-tr)" />
+            </svg>
+            {/* Bubbles */}
+            <div className="relative w-20 h-20">
+              <div className="absolute top-0 right-0 w-12 h-12 rounded-full bg-white/[0.14] backdrop-blur-sm border border-white/30 shadow-lg" />
+              <div className="absolute top-8 right-8 w-7 h-7 rounded-full bg-white/20 backdrop-blur-sm border border-white/40" />
+              <div className="absolute -top-2 right-10 w-4 h-4 rounded-full bg-white/30 border border-white/50 shadow-md" />
+              <div className="absolute top-14 right-1 w-3 h-3 rounded-full bg-amber-400/80 shadow-[0_0_8px_rgba(251,191,36,0.9)]" />
+              <div className="absolute top-2 right-0 w-2 h-2 rounded-full bg-white/70" />
+            </div>
+          </div>
+
+          {/* ── Bubble / dot cluster — BOTTOM LEFT corner ── */}
+          <div className="absolute bottom-24 left-6 z-10 pointer-events-none">
+            {/* Dot grid pattern */}
+            <svg width="80" height="80" viewBox="0 0 80 80" className="absolute -bottom-2 -left-2 opacity-40">
+              <pattern id="dot-bl" x="0" y="0" width="14" height="14" patternUnits="userSpaceOnUse">
+                <circle cx="3" cy="3" r="1.8" fill="rgba(255,255,255,0.5)" />
+              </pattern>
+              <rect width="80" height="80" fill="url(#dot-bl)" />
+            </svg>
+            {/* Bubbles */}
+            <div className="relative w-18 h-18">
+              <div className="absolute bottom-0 left-0 w-11 h-11 rounded-full bg-white/[0.12] backdrop-blur-sm border border-white/25 shadow-lg" />
+              <div className="absolute bottom-6 left-6 w-6 h-6 rounded-full bg-white/18 border border-white/35" />
+              <div className="absolute -bottom-1 left-10 w-3.5 h-3.5 rounded-full bg-amber-400/70 shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
+              <div className="absolute bottom-12 left-1 w-2.5 h-2.5 rounded-full bg-white/50" />
+            </div>
+          </div>
 
           {/* Logo — top left */}
           <Link

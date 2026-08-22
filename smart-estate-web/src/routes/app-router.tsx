@@ -1,48 +1,104 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 
 // System Layouts (containing <Outlet />)
 import { MainLayout } from "@/layouts/MainLayout";
+import { HomeLayout } from "@/layouts/HomeLayout";
 import { AuthLayout } from "@/layouts/AuthLayout";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
 
 // Route Security Guard
 import { ProtectedRoute } from "@/components/common/ProtectedRoute";
 
-// Page Components
+// Landing Page
 import { HomePage } from "@/pages/HomePage";
+
+// App Pages (HomeLayout + AppHeader)
+import { AppHomePage } from "@/pages/AppHomePage";
 import { PropertyListPage } from "@/features/properties/pages/PropertyListPage";
 import { PropertyDetailPage } from "@/features/properties/pages/PropertyDetailPage";
+import { PostListingPage } from "@/features/listings/pages/PostListingPage";
+
+// Auth
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
+
+// Dashboard (protected)
 import { AppointmentPage } from "@/features/appointments/pages/AppointmentPage";
 import { PipelinePage } from "@/features/pipeline/pages/PipelinePage";
 import { ChatPage } from "@/features/chat/pages/ChatPage";
 import { DashboardOverviewPage } from "@/features/dashboard/pages/DashboardOverviewPage";
+
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
 /**
- * CẤU HÌNH ĐỊNH TUYẾN ỨNG DỤNG (APP ROUTER)
- * 
- * 1. MainLayout (Public Routes): Bọc các trang công khai bằng Header & Footer chung.
- *    Các trang con (HomePage, PropertyListPage...) tự động chui vào thẻ <Outlet /> của MainLayout.
- * 
- * 2. AuthLayout (Auth Routes): Khung giao diện thẻ căn giữa cho Đăng nhập / Đăng ký.
- * 
- * 3. DashboardLayout (Protected Routes): Khung Quản trị Môi giới có Sidebar + Header + <Outlet />.
+ * CẤU HÌNH ĐỊNH TUYẾN ỨNG DỤNG
+ *
+ * Mỗi nhóm route có layout riêng:
+ * - /              → MainLayout  (Landing page — Header cũ)
+ * - /home, /properties, /post-listing → HomeLayout (AppHeader mới)
+ * - /auth/*        → AuthLayout
+ * - /dashboard/*   → DashboardLayout (protected)
  */
 const router = createBrowserRouter([
-  // 1. PUBLIC ROUTES (MainLayout with Header, Footer & <Outlet />)
+
+  // ─── 1. LANDING PAGE ─────────────────────────────────────────────────────
   {
     path: "/",
     element: <MainLayout />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: "properties", element: <PropertyListPage /> },
-      { path: "properties/:id", element: <PropertyDetailPage /> },
     ],
   },
 
-  // 2. AUTHENTICATION ROUTES (AuthLayout with Centered Card & <Outlet />)
+  // ─── 2. APP HOME ─────────────────────────────────────────────────────────
+  {
+    path: "/home",
+    element: <HomeLayout />,
+    children: [
+      { index: true, element: <AppHomePage /> },
+    ],
+  },
+
+  // ─── 3. PROPERTIES ───────────────────────────────────────────────────────
+  {
+    path: "/properties",
+    element: <HomeLayout />,
+    children: [
+      { index: true, element: <PropertyListPage /> },
+      { path: ":id", element: <PropertyDetailPage /> },
+    ],
+  },
+
+  // ─── 4. POST LISTING ─────────────────────────────────────────────────────
+  {
+    path: "/post-listing",
+    element: <HomeLayout />,
+    children: [
+      { index: true, element: <PostListingPage /> },
+    ],
+  },
+
+  // ─── 5. CONVENIENCE ALIASES ──────────────────────────────────────────────
+  {
+    path: "/mua-ban",
+    element: <Navigate to="/properties?type=buy" replace />,
+  },
+  {
+    path: "/cho-thue",
+    element: <Navigate to="/properties?type=rent" replace />,
+  },
+  {
+    path: "/favorites",
+    element: <HomeLayout />,
+    children: [{ index: true, element: <AppHomePage /> }],
+  },
+  {
+    path: "/blog",
+    element: <HomeLayout />,
+    children: [{ index: true, element: <AppHomePage /> }],
+  },
+
+  // ─── 6. AUTH ROUTES ──────────────────────────────────────────────────────
   {
     path: "/auth",
     element: <AuthLayout />,
@@ -52,7 +108,7 @@ const router = createBrowserRouter([
     ],
   },
 
-  // 3. PROTECTED DASHBOARD ROUTES (DashboardLayout with Sidebar & <Outlet />)
+  // ─── 7. PROTECTED DASHBOARD ROUTES ───────────────────────────────────────
   {
     element: <ProtectedRoute />,
     children: [
@@ -69,7 +125,7 @@ const router = createBrowserRouter([
     ],
   },
 
-  // 4. CATCH-ALL 404 NOT FOUND ROUTE
+  // ─── 8. CATCH-ALL 404 ────────────────────────────────────────────────────
   {
     path: "*",
     element: <NotFoundPage />,
