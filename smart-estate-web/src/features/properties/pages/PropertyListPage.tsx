@@ -2,38 +2,51 @@ import { useState, useMemo, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   Search,
-  SlidersHorizontal,
   MapPin,
   Bed,
   Bath,
   Maximize2,
   Heart,
-  X,
   Star,
-  Check,
-  PanelLeftClose,
-  PanelLeftOpen,
+  ChevronLeft,
+  ChevronRight,
+  LayoutGrid,
+  List,
   RotateCcw,
 } from "lucide-react";
 import {
   MOCK_PROPERTIES,
-  CITIES,
-  PROPERTY_TYPES_OPTIONS,
-  PRICE_RANGES_BUY,
-  PRICE_RANGES_RENT,
   type Property,
 } from "@/features/properties/data/mockProperties";
-import { Button } from "@/components/ui/button";
 import { CustomSelect } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { PropertySearchHeader } from "@/features/properties/components/PropertySearchHeader";
+import {
+  PropertyFilterModal,
+  type PropertyFilterValues,
+} from "@/features/properties/components/PropertyFilterModal";
+import { PropertyMap } from "@/features/properties/components/PropertyMap";
 
-// ─── Property Grid Card ──────────────────────────────────────────────────────
-const PropertyGridCard = ({ property }: { property: Property }) => {
+// ─── Restore Original Clean Property Card ──────────────────────────────────────
+const PropertyGridCard = ({
+  property,
+  isHovered,
+  onHover,
+}: {
+  property: Property;
+  isHovered?: boolean;
+  onHover?: (id: string | null) => void;
+}) => {
   const [liked, setLiked] = useState(false);
 
   return (
     <Link
       to={`/properties/${property.id}`}
-      className="group flex flex-col bg-white dark:bg-[#151518] rounded-2xl overflow-hidden border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+      onMouseEnter={() => onHover?.(property.id)}
+      onMouseLeave={() => onHover?.(null)}
+      className={`group flex flex-col bg-white dark:bg-[#151518] rounded-2xl overflow-hidden border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ${
+        isHovered ? "ring-2 ring-zinc-900 dark:ring-white" : ""
+      }`}
     >
       {/* Image Banner */}
       <div className="relative aspect-[16/10] overflow-hidden bg-zinc-100 dark:bg-zinc-800">
@@ -59,6 +72,7 @@ const PropertyGridCard = ({ property }: { property: Property }) => {
         <button
           onClick={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             setLiked((v) => !v);
           }}
           className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md flex items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all z-10"
@@ -99,7 +113,7 @@ const PropertyGridCard = ({ property }: { property: Property }) => {
             {property.title}
           </h3>
           <p className="text-[12px] text-zinc-400 flex items-center gap-1 mt-0.5">
-            <MapPin className="w-3 h-3 shrink-0" />
+            <MapPin className="w-3 h-3 shrink-0 text-zinc-400" />
             <span className="truncate">{property.address}</span>
           </p>
         </div>
@@ -127,73 +141,195 @@ const PropertyGridCard = ({ property }: { property: Property }) => {
   );
 };
 
-// ─── Filter State ─────────────────────────────────────────────────────────────
-interface FilterState {
-  keyword: string;
-  listingType: "" | "buy" | "rent";
-  propertyType: string;
-  city: string;
-  bedrooms: string;
-  priceRange: string;
-}
+// ─── Property List Card (Compact List Mode) ──────────────────────────────────
+const PropertyListCard = ({
+  property,
+  isHovered,
+  onHover,
+}: {
+  property: Property;
+  isHovered?: boolean;
+  onHover?: (id: string | null) => void;
+}) => {
+  const [liked, setLiked] = useState(false);
 
+  return (
+    <Link
+      to={`/properties/${property.id}`}
+      onMouseEnter={() => onHover?.(property.id)}
+      onMouseLeave={() => onHover?.(null)}
+      className={`group flex flex-col sm:flex-row bg-white dark:bg-[#151518] rounded-2xl overflow-hidden border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs hover:shadow-xl transition-all duration-300 ${
+        isHovered ? "ring-2 ring-zinc-900 dark:ring-white" : ""
+      }`}
+    >
+      <div className="relative sm:w-56 aspect-[16/10] sm:aspect-auto overflow-hidden bg-zinc-100 dark:bg-zinc-800 shrink-0">
+        <img
+          src={property.thumbnailUrl}
+          alt={property.title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+        />
+        <div className="absolute top-3 left-3 flex items-center gap-1.5 z-10">
+          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase bg-zinc-900/85 text-white backdrop-blur-md">
+            {property.listingType === "buy" ? "Cần bán" : "Cho thuê"}
+          </span>
+        </div>
+      </div>
+
+      <div className="p-4 flex flex-col justify-between flex-1 gap-2">
+        <div>
+          <div className="flex items-center justify-between">
+            <span className="text-[18px] font-black text-zinc-900 dark:text-white">
+              {property.priceDisplay}
+            </span>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setLiked(!liked);
+              }}
+              className="p-1 text-zinc-400 hover:text-rose-500 transition-colors"
+            >
+              <Heart className={`w-4 h-4 ${liked ? "fill-rose-500 text-rose-500" : ""}`} />
+            </button>
+          </div>
+
+          <h3 className="text-[15px] font-bold text-zinc-900 dark:text-white line-clamp-1 group-hover:text-zinc-700 dark:group-hover:text-zinc-200 transition-colors">
+            {property.title}
+          </h3>
+
+          <p className="text-[12px] text-zinc-400 flex items-center gap-1 mt-1">
+            <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+            <span className="truncate">{property.address}</span>
+          </p>
+
+          <p className="text-[12px] text-zinc-500 dark:text-zinc-400 line-clamp-2 mt-2">
+            {property.description}
+          </p>
+        </div>
+
+        <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800 text-[12px] text-zinc-500">
+          <div className="flex items-center gap-3">
+            <span>{property.bedrooms} PN</span>
+            <span>•</span>
+            <span>{property.bathrooms} WC</span>
+            <span>•</span>
+            <span>{property.area} m²</span>
+          </div>
+
+          <span className="text-[12px] font-bold text-zinc-900 dark:text-white group-hover:underline">
+            Xem chi tiết →
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+};
+
+// ─── Main PropertyListPage Component ──────────────────────────────────────────
 export const PropertyListPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Sidebar visibility state
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [sortBy, setSortBy] = useState("newest");
+  // Filter Modal State
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
-  // Filters State synchronized with URL query params
-  const [filters, setFilters] = useState<FilterState>({
+  // View mode (grid vs list)
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [sortBy, setSortBy] = useState("newest");
+  const [hoveredPropertyId, setHoveredPropertyId] = useState<string | null>(null);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+
+  // Filter Values State
+  const [filters, setFilters] = useState<PropertyFilterValues>({
     keyword: searchParams.get("q") || "",
+    region: "all",
+    city: searchParams.get("city") || "",
+    district: searchParams.get("district") || "",
+    ward: searchParams.get("ward") || "",
     listingType: (searchParams.get("type") as "" | "buy" | "rent") || "",
     propertyType: searchParams.get("category") || "",
-    city: searchParams.get("city") || "",
-    bedrooms: "",
+    posterType: searchParams.get("poster") || "",
     priceRange: searchParams.get("price") || "",
+    minPrice: "",
+    maxPrice: "",
+    bedrooms: searchParams.get("beds") || "",
+    bathrooms: "",
+    minArea: "",
+    maxArea: "",
+    direction: "",
+    amenities: [],
   });
 
-  // Re-sync filters whenever URL query changes (Instant Header Navigation)
+  // Re-sync with URL query params
   useEffect(() => {
     setFilters({
       keyword: searchParams.get("q") || "",
+      region: "all",
+      city: searchParams.get("city") || "",
+      district: searchParams.get("district") || "",
+      ward: searchParams.get("ward") || "",
       listingType: (searchParams.get("type") as "" | "buy" | "rent") || "",
       propertyType: searchParams.get("category") || "",
-      city: searchParams.get("city") || "",
-      bedrooms: "",
+      posterType: searchParams.get("poster") || "",
       priceRange: searchParams.get("price") || "",
+      minPrice: "",
+      maxPrice: "",
+      bedrooms: searchParams.get("beds") || "",
+      bathrooms: "",
+      minArea: "",
+      maxArea: "",
+      direction: "",
+      amenities: [],
     });
   }, [searchParams]);
 
-  const updateFilter = (partial: Partial<FilterState>) => {
-    setFilters((prev) => {
-      const next = { ...prev, ...partial };
-      const params = new URLSearchParams();
-      if (next.keyword) params.set("q", next.keyword);
-      if (next.listingType) params.set("type", next.listingType);
-      if (next.propertyType) params.set("category", next.propertyType);
-      if (next.city) params.set("city", next.city);
-      if (next.priceRange) params.set("price", next.priceRange);
-      setSearchParams(params);
-      return next;
-    });
+  // Apply filters & sync to URL query
+  const applyFilters = (newFilters: PropertyFilterValues) => {
+    setFilters(newFilters);
+    setCurrentPage(1); // Reset page on filter change
+    const params = new URLSearchParams();
+    if (newFilters.keyword) params.set("q", newFilters.keyword);
+    if (newFilters.city) params.set("city", newFilters.city);
+    if (newFilters.district) params.set("district", newFilters.district);
+    if (newFilters.ward) params.set("ward", newFilters.ward);
+    if (newFilters.listingType) params.set("type", newFilters.listingType);
+    if (newFilters.propertyType) params.set("category", newFilters.propertyType);
+    if (newFilters.posterType) params.set("poster", newFilters.posterType);
+    if (newFilters.priceRange) params.set("price", newFilters.priceRange);
+    if (newFilters.bedrooms) params.set("beds", newFilters.bedrooms);
+    setSearchParams(params);
   };
 
+  // Reset all filters
   const resetFilters = () => {
-    setFilters({
+    const emptyFilters: PropertyFilterValues = {
       keyword: "",
+      region: "all",
+      city: "",
+      district: "",
+      ward: "",
       listingType: "",
       propertyType: "",
-      city: "",
-      bedrooms: "",
+      posterType: "",
       priceRange: "",
-    });
+      minPrice: "",
+      maxPrice: "",
+      bedrooms: "",
+      bathrooms: "",
+      minArea: "",
+      maxArea: "",
+      direction: "",
+      amenities: [],
+    };
+    setFilters(emptyFilters);
+    setCurrentPage(1);
     setSearchParams(new URLSearchParams());
   };
 
-  // Filtered properties list
-  const filtered = useMemo(() => {
+  // Filter properties logic
+  const filteredProperties = useMemo(() => {
     let list = [...MOCK_PROPERTIES];
 
     if (filters.listingType) {
@@ -202,8 +338,14 @@ export const PropertyListPage = () => {
     if (filters.propertyType) {
       list = list.filter((p) => p.propertyType === filters.propertyType);
     }
+    if (filters.posterType) {
+      list = list.filter((p) => p.posterType === filters.posterType);
+    }
     if (filters.city) {
       list = list.filter((p) => p.city.toLowerCase().includes(filters.city.toLowerCase()));
+    }
+    if (filters.district) {
+      list = list.filter((p) => p.district.toLowerCase().includes(filters.district.toLowerCase()));
     }
     if (filters.keyword.trim()) {
       const kw = filters.keyword.toLowerCase();
@@ -225,6 +367,11 @@ export const PropertyListPage = () => {
       const max = parseFloat(maxS);
       list = list.filter((p) => p.price >= min && p.price <= max);
     }
+    if (filters.amenities.length > 0) {
+      list = list.filter((p) =>
+        filters.amenities.every((am) => p.amenities?.includes(am))
+      );
+    }
 
     if (sortBy === "newest") list.sort((a, b) => b.postedAt.localeCompare(a.postedAt));
     else if (sortBy === "price-asc") list.sort((a, b) => a.price - b.price);
@@ -234,17 +381,27 @@ export const PropertyListPage = () => {
     return list;
   }, [filters, sortBy]);
 
-  const activeFilterCount = Object.values(filters).filter(Boolean).length;
+  // Paginated items slice
+  const totalPages = Math.ceil(filteredProperties.length / itemsPerPage) || 1;
+  const paginatedProperties = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredProperties.slice(start, start + itemsPerPage);
+  }, [filteredProperties, currentPage]);
 
-  const propertyTypeOptions = [
-    { value: "", label: "Tất cả loại BĐS" },
-    ...PROPERTY_TYPES_OPTIONS.map((t) => ({ value: t.value, label: t.label })),
-  ];
+  // Summary list of active tags for header & pills
+  const activeTagsSummary = useMemo(() => {
+    const list: string[] = [];
+    if (filters.city) list.push(filters.city);
+    if (filters.district) list.push(filters.district);
+    if (filters.listingType) list.push(filters.listingType === "buy" ? "Cần bán" : "Cho thuê");
+    if (filters.bedrooms) list.push(`${filters.bedrooms} PN`);
+    if (filters.posterType === "owner") list.push("Chính chủ");
+    return list;
+  }, [filters]);
 
-  const cityOptions = [
-    { value: "", label: "Toàn quốc (Tất cả)" },
-    ...CITIES.map((c) => ({ value: c, label: c })),
-  ];
+  const activeFilterCount = Object.values(filters).filter(
+    (v) => (Array.isArray(v) ? v.length > 0 : Boolean(v) && v !== "all")
+  ).length;
 
   const sortOptions = [
     { value: "newest", label: "Mới nhất" },
@@ -254,245 +411,206 @@ export const PropertyListPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F9F8F6] dark:bg-[#0c0c0e] text-zinc-900 dark:text-zinc-100 pt-20">
+    <div className="w-full pb-16">
+      
+      {/* ── 1. Top Search Header Bar ── */}
+      <PropertySearchHeader
+        keyword={filters.keyword}
+        onKeywordChange={(val) => applyFilters({ ...filters, keyword: val })}
+        activeFilterCount={activeFilterCount}
+        activeFilterSummary={activeTagsSummary}
+        onOpenFilterModal={() => setIsFilterModalOpen(true)}
+      />
 
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex gap-6 items-start">
-
-          {/* ── Collapsible Left Filter Sidebar (Sát mép trái) ── */}
-          {isSidebarOpen ? (
-            <aside className="w-[300px] shrink-0 bg-white dark:bg-[#151518] rounded-3xl p-6 border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs flex flex-col gap-5 sticky top-[88px] max-h-[calc(100vh-100px)] overflow-y-auto z-20 animate-in fade-in slide-in-from-left-4 duration-300">
+      {/* ── 2. Main Content Split View (Left List, Right Leaflet Map) ── */}
+      <div className="w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          {/* ── Left Column: Property List & Pagination (7 cols) ── */}
+          <div className="lg:col-span-7 flex flex-col gap-4 min-w-0">
+            
+            {/* Top Toolbar Controls & Active Filter Chips */}
+            <div className="bg-white dark:bg-[#151518] p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs flex flex-col gap-3">
               
-              {/* Header Sidebar: Tiêu đề + Nút Xóa bộ lọc ĐẶT TRÊN CÙNG DỄ NHÌN */}
-              <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3.5">
-                <div className="flex items-center gap-2">
-                  <SlidersHorizontal className="w-4 h-4 text-zinc-900 dark:text-white" />
-                  <h2 className="text-[15px] font-extrabold text-zinc-900 dark:text-white">Bộ lọc tìm kiếm</h2>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <h1 className="text-[16px] font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
+                    <span>Danh sách bất động sản</span>
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white">
+                      {filteredProperties.length} kết quả
+                    </span>
+                  </h1>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  {activeFilterCount > 0 && (
+                <div className="flex items-center gap-3">
+                  {/* View Mode Toggle */}
+                  <div className="flex items-center p-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60">
                     <button
-                      onClick={resetFilters}
-                      className="flex items-center gap-1 text-[11.5px] font-bold text-rose-500 hover:text-rose-600 transition-colors"
-                      title="Xóa tất cả điều kiện lọc"
+                      onClick={() => setViewMode("grid")}
+                      className={`p-1.5 rounded-lg text-xs font-bold transition-all ${
+                        viewMode === "grid"
+                          ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-xs"
+                          : "text-zinc-400"
+                      }`}
+                      title="Chế độ lưới"
                     >
-                      <RotateCcw className="w-3 h-3" />
-                      Xóa bộ lọc
+                      <LayoutGrid className="w-4 h-4" />
                     </button>
-                  )}
+                    <button
+                      onClick={() => setViewMode("list")}
+                      className={`p-1.5 rounded-lg text-xs font-bold transition-all ${
+                        viewMode === "list"
+                          ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-xs"
+                          : "text-zinc-400"
+                      }`}
+                      title="Chế độ danh sách"
+                    >
+                      <List className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* CustomSelect Sort By */}
+                  <CustomSelect
+                    options={sortOptions}
+                    value={sortBy}
+                    onChange={setSortBy}
+                    className="w-44 text-[12px]"
+                  />
+                </div>
+              </div>
+
+              {/* Active Filter Chips with Quick Remove */}
+              {activeTagsSummary.length > 0 && (
+                <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-zinc-100 dark:border-zinc-800/80">
+                  <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mr-1">
+                    Đang lọc:
+                  </span>
+                  {activeTagsSummary.map((tag, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11.5px] font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200/80 dark:border-zinc-700/80"
+                    >
+                      {tag}
+                    </span>
+                  ))}
                   <button
-                    onClick={() => setIsSidebarOpen(false)}
-                    className="p-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
-                    title="Thu gọn sidebar"
+                    onClick={resetFilters}
+                    className="flex items-center gap-1 text-[11.5px] font-bold text-rose-500 hover:text-rose-600 ml-auto transition-colors"
                   >
-                    <PanelLeftClose className="w-4 h-4" />
+                    <RotateCcw className="w-3 h-3" />
+                    Xóa lọc
                   </button>
                 </div>
-              </div>
-
-              {/* Ô Tìm kiếm từ khóa */}
-              <div>
-                <label className="text-[10.5px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">
-                  Từ khóa tìm kiếm
-                </label>
-                <div className="relative">
-                  <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={filters.keyword}
-                    onChange={(e) => updateFilter({ keyword: e.target.value })}
-                    placeholder="Vinhomes, trọ Thủ Đức..."
-                    className="w-full pl-9 pr-7 py-2 text-[13px] rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/80 text-zinc-900 dark:text-white placeholder:text-zinc-400 outline-none focus:ring-1 focus:ring-zinc-900/20"
-                  />
-                  {filters.keyword && (
-                    <button
-                      onClick={() => updateFilter({ keyword: "" })}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Mục đích giao dịch */}
-              <div>
-                <label className="text-[10.5px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">
-                  Nhu cầu giao dịch
-                </label>
-                <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-zinc-100 dark:bg-zinc-800">
-                  {[
-                    { key: "", label: "Tất cả" },
-                    { key: "buy", label: "Cần mua" },
-                    { key: "rent", label: "Cho thuê" },
-                  ].map((item) => (
-                    <button
-                      key={item.key}
-                      onClick={() => updateFilter({ listingType: item.key as "" | "buy" | "rent" })}
-                      className={`py-1.5 rounded-lg text-[12px] font-bold transition-all ${
-                        filters.listingType === item.key
-                          ? "bg-white dark:bg-zinc-900 text-zinc-950 dark:text-white shadow-xs"
-                          : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900"
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* CustomSelect: Loại BĐS */}
-              <div>
-                <label className="text-[10.5px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">
-                  Loại bất động sản
-                </label>
-                <CustomSelect
-                  options={propertyTypeOptions}
-                  value={filters.propertyType}
-                  onChange={(val) => updateFilter({ propertyType: val })}
-                  placeholder="Tất cả loại BĐS"
-                />
-              </div>
-
-              {/* CustomSelect: Tỉnh / Thành phố */}
-              <div>
-                <label className="text-[10.5px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">
-                  Tỉnh / Thành phố
-                </label>
-                <CustomSelect
-                  options={cityOptions}
-                  value={filters.city}
-                  onChange={(val) => updateFilter({ city: val })}
-                  placeholder="Toàn quốc (Tất cả)"
-                />
-              </div>
-
-              {/* Khoảng giá */}
-              <div>
-                <label className="text-[10.5px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">
-                  Khoảng giá ({filters.listingType === "rent" ? "Thuê" : "Mua"})
-                </label>
-                <div className="flex flex-col gap-1">
-                  {(filters.listingType === "rent" ? PRICE_RANGES_RENT : PRICE_RANGES_BUY).map((range) => {
-                    const val = `${range.min}-${range.max}`;
-                    const isSelected = filters.priceRange === val;
-                    return (
-                      <button
-                        key={range.label}
-                        onClick={() => updateFilter({ priceRange: isSelected ? "" : val })}
-                        className={`flex items-center justify-between px-3 py-1.5 rounded-xl text-[12px] font-medium transition-all ${
-                          isSelected
-                            ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 font-bold"
-                            : "bg-zinc-50 dark:bg-zinc-800/40 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                        }`}
-                      >
-                        <span>{range.label}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Số phòng ngủ */}
-              <div>
-                <label className="text-[10.5px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">
-                  Số phòng ngủ
-                </label>
-                <div className="grid grid-cols-4 gap-1.5">
-                  {["1", "2", "3", "4+"].map((bed) => {
-                    const isSelected = filters.bedrooms === bed;
-                    return (
-                      <button
-                        key={bed}
-                        onClick={() => updateFilter({ bedrooms: isSelected ? "" : bed })}
-                        className={`py-1.5 rounded-xl text-[12px] font-bold border transition-all ${
-                          isSelected
-                            ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 border-zinc-900 dark:border-white shadow-xs"
-                            : "border-zinc-200 dark:border-zinc-700/80 text-zinc-600 dark:text-zinc-300 hover:border-zinc-400"
-                        }`}
-                      >
-                        {bed} PN
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </aside>
-          ) : (
-            /* Button toggle mở lại bộ lọc (Gọn gàng, tinh tế hợp tông web - Ảnh 5 fix) */
-            <Button
-              onClick={() => setIsSidebarOpen(true)}
-              variant="outline"
-              size="sm"
-              className="sticky top-[88px] rounded-full text-[12.5px] font-bold gap-1.5 border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-md shrink-0 z-20"
-            >
-              <PanelLeftOpen className="w-4 h-4" />
-              <span>Hiện bộ lọc</span>
-              {activeFilterCount > 0 && (
-                <span className="w-4 h-4 rounded-full bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 text-[10px] flex items-center justify-center">
-                  {activeFilterCount}
-                </span>
               )}
-            </Button>
-          )}
-
-          {/* ── Main Properties Grid Container ── */}
-          <div className="flex-1 min-w-0">
-
-            {/* Top Toolbar (Controls & Count) */}
-            <div className="flex items-center justify-between pb-4 mb-6 border-b border-zinc-200/80 dark:border-zinc-800">
-              <div className="flex items-center gap-3">
-                <p className="text-[14px] font-medium text-zinc-500 dark:text-zinc-400">
-                  Hiển thị <span className="font-extrabold text-zinc-900 dark:text-white">{filtered.length}</span> bất động sản phù hợp
-                </p>
-              </div>
-
-              {/* CustomSelect Sort By */}
-              <div className="flex items-center gap-2">
-                <span className="text-[12px] text-zinc-400 font-medium hidden sm:inline">Sắp xếp:</span>
-                <CustomSelect
-                  options={sortOptions}
-                  value={sortBy}
-                  onChange={setSortBy}
-                  className="w-44"
-                />
-              </div>
             </div>
 
-            {/* Properties Grid */}
-            {filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-[#151518] rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 text-center p-8">
+            {/* Empty State */}
+            {filteredProperties.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 bg-white dark:bg-[#151518] rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 text-center p-8 shadow-xs">
                 <div className="w-14 h-14 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-3">
                   <Search className="w-7 h-7 text-zinc-400" />
                 </div>
                 <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-1">
                   Không tìm thấy bất động sản phù hợp
                 </h3>
-                <p className="text-zinc-400 text-[13.5px] max-w-[360px] mb-5">
-                  Vui lòng thử điều chỉnh lại từ khóa hoặc xóa bớt các điều kiện lọc để xem thêm kết quả.
+                <p className="text-zinc-400 text-[13.5px] max-w-sm mb-5">
+                  Vui lòng chọn lại khu vực hoặc thử mở rộng các điều kiện lọc trong bộ lọc.
                 </p>
                 <Button onClick={resetFilters} className="rounded-full px-6 font-bold">
-                  Xóa bộ lọc tìm kiếm
+                  Xóa tất cả điều kiện lọc
                 </Button>
               </div>
             ) : (
+              /* Cards List */
               <div
-                className={`grid gap-5 ${
-                  isSidebarOpen
-                    ? "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
-                    : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
+                className={`grid gap-4 ${
+                  viewMode === "grid" ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"
                 }`}
               >
-                {filtered.map((property) => (
-                  <PropertyGridCard key={property.id} property={property} />
-                ))}
+                {paginatedProperties.map((property) =>
+                  viewMode === "grid" ? (
+                    <PropertyGridCard
+                      key={property.id}
+                      property={property}
+                      isHovered={hoveredPropertyId === property.id}
+                      onHover={setHoveredPropertyId}
+                    />
+                  ) : (
+                    <PropertyListCard
+                      key={property.id}
+                      property={property}
+                      isHovered={hoveredPropertyId === property.id}
+                      onHover={setHoveredPropertyId}
+                    />
+                  )
+                )}
+              </div>
+            )}
+
+            {/* ── Pagination Bar ── */}
+            {filteredProperties.length > 0 && (
+              <div className="flex items-center justify-between bg-white dark:bg-[#151518] p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs mt-2">
+                <span className="text-[12.5px] font-medium text-zinc-500">
+                  Trang <span className="font-bold text-zinc-900 dark:text-white">{currentPage}</span> / {totalPages} (Tổng {filteredProperties.length} BĐS)
+                </span>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                    className="w-8.5 h-8.5 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-600 dark:text-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => (
+                    <button
+                      key={pg}
+                      onClick={() => setCurrentPage(pg)}
+                      className={`w-8.5 h-8.5 rounded-xl text-[12.5px] font-bold transition-all ${
+                        currentPage === pg
+                          ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 shadow-md"
+                          : "border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                      }`}
+                    >
+                      {pg}
+                    </button>
+                  ))}
+
+                  <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                    className="w-8.5 h-8.5 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-600 dark:text-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             )}
           </div>
+
+          {/* ── Right Column: Interactive Leaflet Map (5 cols) ── */}
+          <div className="lg:col-span-5 hidden lg:block sticky top-20">
+            <PropertyMap
+              properties={filteredProperties}
+              selectedCity={filters.city}
+              selectedDistrict={filters.district}
+              hoveredPropertyId={hoveredPropertyId}
+              onSelectProperty={(id) => setHoveredPropertyId(id)}
+            />
+          </div>
         </div>
       </div>
+
+      {/* ── 3. Filter Modal Popup ── */}
+      <PropertyFilterModal
+        open={isFilterModalOpen}
+        onOpenChange={setIsFilterModalOpen}
+        filters={filters}
+        onApplyFilters={applyFilters}
+        onResetFilters={resetFilters}
+        filteredCount={filteredProperties.length}
+      />
     </div>
   );
 };

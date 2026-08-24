@@ -187,9 +187,9 @@ export const AppHomePage = () => {
     <div className="min-h-screen bg-[#F9F8F6] dark:bg-[#0c0c0e] text-zinc-900 dark:text-zinc-100 selection:bg-zinc-900 selection:text-white">
 
       {/* ══════════════════════════════════════════════════════════
-          HERO SECTION
+          HERO SECTION (Rounded Card Container)
       ══════════════════════════════════════════════════════════ */}
-      <section className="relative min-h-[540px] lg:min-h-[600px] flex flex-col justify-between overflow-hidden">
+      <section className="relative min-h-[500px] lg:min-h-[560px] flex flex-col justify-between overflow-hidden rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-md">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <img
@@ -202,7 +202,7 @@ export const AppHomePage = () => {
         </div>
 
         {/* Top Hero Text Container */}
-        <div className="relative z-10 max-w-[1440px] mx-auto w-full px-6 sm:px-10 lg:px-16 pt-24 sm:pt-32">
+        <div className="relative z-10 max-w-[1440px] mx-auto w-full px-6 sm:px-10 lg:px-12 pt-10 sm:pt-14 pb-8">
           <div className="max-w-[780px]">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 dark:bg-black/30 border border-white/20 backdrop-blur-md mb-5">
               <Sparkles className="w-3.5 h-3.5 text-white" />

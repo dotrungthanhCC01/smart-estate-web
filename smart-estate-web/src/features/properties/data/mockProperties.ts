@@ -11,6 +11,8 @@ export interface PropertyRoomImage {
   url: string;
 }
 
+export type PosterType = "owner" | "broker" | "developer";
+
 export interface Property {
   id: string;
   title: string;
@@ -28,10 +30,12 @@ export interface Property {
   bathrooms: number;
   parking?: number;        // garage / parking slots
   floors?: number;
-  direction?: string;      // "Đông", "Tây", "Nam", "Bắc", "Đông Nam"
+  direction?: string;      // "Đông", "Tây", "Nam", "Bắc", "Đông Nam", "Tây Nam", "Tây Bắc", "Đông Bắc"
   legalStatus?: string;    // "Sổ hồng", "Sổ đỏ", "Hợp đồng mua bán"
+  economicRegion?: "north" | "central" | "south";
   city: string;
   district: string;
+  ward?: string;
   address: string;
   lat: number;
   lng: number;
@@ -46,6 +50,7 @@ export interface Property {
   isFeatured: boolean;
   isPopular: boolean;
   isNew: boolean;
+  posterType?: PosterType;  // "owner" (chính chủ), "broker" (môi giới), "developer" (chủ đầu tư)
   agentName: string;
   agentPhone: string;
   agentAvatar: string;

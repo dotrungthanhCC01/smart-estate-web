@@ -94,10 +94,10 @@ export const PropertyDetailPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9F8F6] dark:bg-[#0c0c0e] text-zinc-900 dark:text-zinc-100 pt-20 pb-24">
+    <div className="min-h-screen bg-[#F9F8F6] dark:bg-[#0c0c0e] text-zinc-900 dark:text-zinc-100 pt-2 pb-24">
 
       {/* ── Top Breadcrumbs Bar ── */}
-      <div className="bg-white/80 dark:bg-[#121215]/80 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800/80 px-6 sm:px-10 py-3.5 sticky top-[68px] z-20">
+      <div className="bg-white/90 dark:bg-[#151518]/90 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-800/80 rounded-2xl px-6 py-3 sticky top-2 z-30 shadow-xs mb-4">
         <div className="max-w-[1440px] mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2 text-[13px] text-zinc-400">
             <Link
