@@ -16,6 +16,7 @@ import { HomePage } from "@/pages/HomePage";
 import { AppHomePage } from "@/pages/AppHomePage";
 import { PropertyListPage } from "@/features/properties/pages/PropertyListPage";
 import { PropertyDetailPage } from "@/features/properties/pages/PropertyDetailPage";
+import { PropertyComparePage } from "@/features/properties/pages/PropertyComparePage";
 import { PostListingPage } from "@/features/listings/pages/PostListingPage";
 
 // Auth
@@ -27,6 +28,8 @@ import { AppointmentPage } from "@/features/appointments/pages/AppointmentPage";
 import { PipelinePage } from "@/features/pipeline/pages/PipelinePage";
 import { ChatPage } from "@/features/chat/pages/ChatPage";
 import { DashboardOverviewPage } from "@/features/dashboard/pages/DashboardOverviewPage";
+import { MyListingsPage } from "@/features/dashboard/pages/MyListingsPage";
+import { PaymentPage } from "@/features/dashboard/pages/PaymentPage";
 
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
@@ -65,6 +68,7 @@ const router = createBrowserRouter([
     element: <HomeLayout />,
     children: [
       { index: true, element: <PropertyListPage /> },
+      { path: "compare", element: <PropertyComparePage /> },
       { path: ":id", element: <PropertyDetailPage /> },
     ],
   },
@@ -120,6 +124,8 @@ const router = createBrowserRouter([
           { path: "appointments", element: <AppointmentPage /> },
           { path: "pipeline", element: <PipelinePage /> },
           { path: "chat", element: <ChatPage /> },
+          { path: "my-listings", element: <MyListingsPage /> },
+          { path: "payment", element: <PaymentPage /> },
         ],
       },
     ],

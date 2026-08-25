@@ -40,28 +40,50 @@ const MapController = ({
 };
 
 /**
- * Custom Price Pill Marker (Matching Image 2 & Image 3 Reference!)
- * Renders a sleek black price pill (e.g. "15.8 tỷ", "8.5tr", "2.9tr") with bottom pointer.
+ * Price Pill Marker — zinc-themed, matches the web's dark design system.
+ * Default: dark zinc-900 pill (matches badge style on cards).
+ * Selected: white pill with dark text + glow ring.
  */
 const createPricePillIcon = (priceDisplay: string, isSelected: boolean) => {
+  const pillBg    = isSelected ? "#ffffff" : "#18181b";
+  const pillColor = isSelected ? "#18181b" : "#ffffff";
+  const pillShadow = isSelected
+    ? "0 4px 20px rgba(0,0,0,0.25), 0 0 0 3px rgba(255,255,255,0.8)"
+    : "0 4px 14px rgba(0,0,0,0.45)";
+  const pointerBg = isSelected ? "#ffffff" : "#18181b";
+  const transform = isSelected ? "scale(1.15)" : "scale(1)";
+
   return L.divIcon({
     className: "custom-map-price-pill-marker",
     html: `
-      <div className="group relative cursor-pointer flex flex-col items-center">
-        <!-- Black Price Pill Badge -->
-        <div className="px-3 py-1 rounded-[14px] text-[12px] font-extrabold shadow-xl transition-all duration-200 transform group-hover:scale-115 flex items-center justify-center whitespace-nowrap ${
-          isSelected
-            ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 ring-4 ring-zinc-400/60 scale-110 z-40"
-            : "bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-black dark:hover:bg-zinc-100"
-        }">
-          <span>${priceDisplay}</span>
+      <div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;transform:${transform};transition:transform 0.2s cubic-bezier(.22,.68,0,1.2);">
+        <div style="
+          background:${pillBg};
+          color:${pillColor};
+          padding:5px 11px;
+          border-radius:20px;
+          font-size:12px;
+          font-weight:800;
+          white-space:nowrap;
+          box-shadow:${pillShadow};
+          letter-spacing:0.01em;
+          font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+          line-height:1.3;
+          border: ${isSelected ? "2px solid #18181b" : "none"};
+        ">
+          ${priceDisplay}
         </div>
-        <!-- Bottom Pin Pointer Triangle -->
-        <div className="w-2.5 h-2.5 bg-zinc-900 dark:bg-white rotate-45 -mt-1 shadow-md"></div>
+        <div style="
+          width:8px;height:8px;
+          background:${pointerBg};
+          transform:rotate(45deg);
+          margin-top:-4px;
+          box-shadow:1px 1px 3px rgba(0,0,0,0.25);
+        "></div>
       </div>
     `,
-    iconSize: [76, 32],
-    iconAnchor: [38, 32],
+    iconSize: [88, 38],
+    iconAnchor: [44, 38],
   });
 };
 
