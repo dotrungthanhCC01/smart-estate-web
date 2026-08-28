@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polygon, useMap } from "react-l
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { Link } from "react-router-dom";
-import { Star, MapPin, Bed, Bath, Maximize2, ExternalLink } from "lucide-react";
+import { Star, MapPin, Bed, Bath, Maximize2, ExternalLink, GitCompare, Heart, X } from "lucide-react";
 import type { Property } from "@/features/properties/data/mockProperties";
 import { VIETNAM_CITIES } from "@/features/properties/data/vietnamLocations";
 
@@ -92,8 +92,27 @@ interface PropertyMapProps {
   selectedCity?: string;
   selectedDistrict?: string;
   hoveredPropertyId?: string | null;
-  onSelectProperty?: (id: string) => void;
+  onSelectProperty?: (id: string | null) => void;
 }
+
+// Helper button to close active Leaflet popup natively
+const PopupCloseButton = () => {
+  const map = useMap();
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        map.closePopup();
+      }}
+      className="w-5.5 h-5.5 rounded-full bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md flex items-center justify-center shadow-md text-zinc-700 dark:text-zinc-200 hover:bg-[#17181B] hover:text-white dark:hover:bg-rose-500 dark:hover:text-white transition-colors"
+      title="Đóng popup"
+    >
+      <X className="w-2.5 h-2.5" />
+    </button>
+  );
+};
 
 export const PropertyMap = ({
   properties,
@@ -143,11 +162,58 @@ export const PropertyMap = ({
   }, [selectedCity, selectedDistrict]);
 
   return (
-    <div className="w-full h-[calc(100vh-140px)] sticky top-[100px] rounded-3xl overflow-hidden border border-zinc-200/80 dark:border-zinc-800/80 shadow-md bg-[#F4F3F0] dark:bg-zinc-900 z-10">
-      
-      {/* Top Map Location Badge */}
-      <div className="absolute top-4 left-4 z-[400] bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-zinc-200/80 dark:border-zinc-800 text-[12px] font-bold text-zinc-900 dark:text-zinc-100 shadow-sm flex items-center gap-1.5">
-        <MapPin className="w-3.5 h-3.5 text-zinc-900 dark:text-white" />
+    <div className="relative w-full h-full rounded-3xl overflow-hidden border border-zinc-200/80 dark:border-zinc-800/80 shadow-md bg-[#e8e0d5] dark:bg-zinc-900">
+
+      {/* ── Global Leaflet style overrides — hide watermarks ── */}
+      <style>{`
+        /* Popup chrome */
+        .custom-leaflet-popup .leaflet-popup-content-wrapper {
+          padding: 0 !important;
+          border-radius: 20px !important;
+          overflow: hidden !important;
+          border: none !important;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.2) !important;
+          background: transparent !important;
+        }
+        .custom-leaflet-popup .leaflet-popup-content {
+          margin: 0 !important;
+          width: 195px !important;
+        }
+        .custom-leaflet-popup .leaflet-popup-tip-container,
+        .custom-leaflet-popup .leaflet-popup-close-button { display: none !important; }
+        /* Force Leaflet links to inherit web theme text colors instead of default blue */
+        .leaflet-container a {
+          color: inherit !important;
+          text-decoration: none !important;
+        }
+        /* Hide all Leaflet attribution / watermark */
+        .leaflet-control-attribution { display: none !important; }
+        /* Style zoom control to match design */
+        .leaflet-control-zoom {
+          border: none !important;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.12) !important;
+          border-radius: 12px !important;
+          overflow: hidden;
+        }
+        .leaflet-control-zoom a {
+          background: rgba(255,255,255,0.95) !important;
+          color: #18181b !important;
+          border: none !important;
+          font-size: 16px !important;
+          font-weight: 700 !important;
+          width: 32px !important;
+          height: 32px !important;
+          line-height: 32px !important;
+        }
+        .leaflet-control-zoom a:hover {
+          background: #18181b !important;
+          color: #fff !important;
+        }
+      `}</style>
+
+      {/* Location Badge — bottom-left to avoid zoom controls */}
+      <div className="absolute bottom-4 left-3 z-[400] pointer-events-none select-none bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-zinc-200/80 dark:border-zinc-800 text-[11px] font-bold text-zinc-800 dark:text-zinc-100 shadow-sm flex items-center gap-1.5">
+        <MapPin className="w-3 h-3 text-rose-500 shrink-0" />
         <span>{activeLocationName}</span>
       </div>
 
@@ -156,10 +222,16 @@ export const PropertyMap = ({
         zoom={zoom}
         scrollWheelZoom={true}
         className="w-full h-full"
+        minZoom={5}
+        maxBounds={[[-12, 90], [28, 130]]}
+        maxBoundsViscosity={0.9}
+        attributionControl={false}
+        zoomControl={true}
       >
+        {/* Esri World Street Map — clean, no watermark, works globally */}
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"
+          maxZoom={19}
         />
 
         <MapController center={center} zoom={zoom} bounds={boundsPolygon} />
@@ -187,56 +259,104 @@ export const PropertyMap = ({
               position={[prop.lat, prop.lng]}
               icon={createPricePillIcon(prop.priceDisplay, isSelected)}
               eventHandlers={{
-                click: () => onSelectProperty?.(prop.id),
+                click: () => onSelectProperty?.(isSelected ? null : prop.id),
               }}
             >
-              <Popup className="custom-leaflet-popup shadow-2xl rounded-2xl overflow-hidden p-0 border-none">
-                <div className="w-64 bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden text-zinc-900 dark:text-white p-1">
-                  <div className="relative aspect-[16/10] rounded-xl overflow-hidden">
+              <Popup
+                className="custom-leaflet-popup shadow-2xl rounded-2xl overflow-hidden p-0 border-none"
+                eventHandlers={{
+                  remove: () => {
+                    onSelectProperty?.(null);
+                  },
+                }}
+              >
+                <div className="w-[195px] bg-white dark:bg-[#151518] rounded-xl overflow-hidden border border-zinc-200/80 dark:border-zinc-800/80 text-zinc-900 dark:text-white shadow-xl">
+                  {/* Image Banner */}
+                  <div className="relative aspect-[16/9] overflow-hidden bg-zinc-100 dark:bg-zinc-800">
                     <img
                       src={prop.thumbnailUrl}
                       alt={prop.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
-                    <span className="absolute top-2 left-2 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-zinc-900/85 text-white backdrop-blur-md">
-                      {prop.listingType === "buy" ? "Cần bán" : "Cho thuê"}
-                    </span>
-                  </div>
-                  
-                  <div className="p-3 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[16px] font-black text-zinc-900 dark:text-white">
-                        {prop.priceDisplay}
+
+                    {/* Top Left Badge */}
+                    <div className="absolute top-1.5 left-1.5 z-10">
+                      <span className="px-1.5 py-0.5 rounded-md text-[8.5px] font-bold uppercase bg-zinc-900/85 text-white backdrop-blur-md">
+                        {prop.listingType === "buy" ? "Cần bán" : "Cho thuê"}
                       </span>
-                      <div className="flex items-center gap-1 text-[11px] font-bold text-amber-500">
-                        <Star className="w-3 h-3 fill-amber-400" />
-                        <span>{prop.rating}</span>
+                    </div>
+
+                    {/* Top Right Actions: Favorite + Close (X) */}
+                    <div className="absolute top-1.5 right-1.5 flex items-center gap-1 z-10">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        className="w-5.5 h-5.5 rounded-full bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md flex items-center justify-center shadow-md text-zinc-600 dark:text-zinc-300"
+                        title="Yêu thích"
+                      >
+                        <Heart className="w-2.5 h-2.5" />
+                      </button>
+                      <PopupCloseButton />
+                    </div>
+                  </div>
+
+                  {/* Content Area — Mini Card */}
+                  <div className="flex flex-col p-2 gap-1.5">
+                    {/* Specs bar (Top of content) */}
+                    <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400 text-[10px] font-medium border-b border-zinc-100 dark:border-zinc-800/80 pb-1">
+                      {prop.bedrooms > 0 && (
+                        <span className="flex items-center gap-0.5">
+                          <Bed className="w-3 h-3 text-zinc-600 dark:text-zinc-300" />
+                          {prop.bedrooms} PN
+                        </span>
+                      )}
+                      {prop.bathrooms > 0 && (
+                        <span className="flex items-center gap-0.5">
+                          <Bath className="w-3 h-3 text-zinc-600 dark:text-zinc-300" />
+                          {prop.bathrooms} WC
+                        </span>
+                      )}
+                      <span className="flex items-center gap-0.5 ml-auto">
+                        <Maximize2 className="w-3 h-3 text-zinc-600 dark:text-zinc-300" />
+                        {prop.area} m²
+                      </span>
+                    </div>
+
+                    {/* Title + Location */}
+                    <div>
+                      <Link
+                        to={`/properties/${prop.id}`}
+                        className="text-[11.5px] font-bold text-zinc-900 dark:text-white line-clamp-1 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors block !text-zinc-900 dark:!text-white leading-tight"
+                      >
+                        {prop.title}
+                      </Link>
+                      <div className="flex items-center gap-0.5 text-zinc-400 text-[10px] mt-0.5">
+                        <MapPin className="w-2.5 h-2.5 shrink-0" />
+                        <span className="truncate">{prop.district}, {prop.city}</span>
                       </div>
                     </div>
 
-                    <h4 className="text-[13px] font-bold line-clamp-1">
-                      {prop.title}
-                    </h4>
-                    
-                    <p className="text-[11px] text-zinc-400 truncate flex items-center gap-1">
-                      <MapPin className="w-3 h-3 shrink-0" />
-                      <span>{prop.address}</span>
-                    </p>
+                    {/* Price & Rating */}
+                    <div className="flex items-center justify-between pt-0.5">
+                      <span className="text-[14px] font-black text-zinc-950 dark:text-white tracking-tight">
+                        {prop.priceDisplay}
+                      </span>
 
-                    <div className="flex items-center gap-2 pt-1 text-[11px] text-zinc-500 dark:text-zinc-400 border-t border-zinc-100 dark:border-zinc-800">
-                      <span>{prop.bedrooms} PN</span>
-                      <span>•</span>
-                      <span>{prop.bathrooms} WC</span>
-                      <span>•</span>
-                      <span>{prop.area} m²</span>
+                      <div className="flex items-center gap-0.5 bg-zinc-50 dark:bg-zinc-800/60 px-1 py-0.5 rounded border border-zinc-100 dark:border-zinc-800 text-[10px] font-bold text-zinc-800 dark:text-zinc-200">
+                        <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
+                        <span>{prop.rating.toFixed(1)}</span>
+                      </div>
                     </div>
 
+                    {/* Action Button */}
                     <Link
                       to={`/properties/${prop.id}`}
-                      className="mt-2 w-full flex items-center justify-center gap-1 py-2 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 text-[12px] font-bold hover:opacity-90 transition-opacity"
+                      className="mt-0.5 w-full flex items-center justify-center gap-1 py-1 rounded-lg bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 text-[10.5px] font-extrabold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all shadow-xs active:scale-[0.99] !text-white dark:!text-zinc-950"
                     >
                       <span>Xem chi tiết</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
+                      <ExternalLink className="w-2.5 h-2.5 text-white dark:text-zinc-950" />
                     </Link>
                   </div>
                 </div>

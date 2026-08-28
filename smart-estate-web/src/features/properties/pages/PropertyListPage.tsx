@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   Search,
@@ -296,6 +296,12 @@ export const PropertyListPage = () => {
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
+  const cardsScrollRef = useRef<HTMLDivElement>(null);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    cardsScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const handleToggleCompare = (id: string) => {
     setCompareIds((prev) => {
@@ -442,7 +448,8 @@ export const PropertyListPage = () => {
   ];
 
   return (
-    <div className="w-full pb-24">
+    <div className="w-full flex flex-col" style={{ height: "calc(100dvh - 32px)" }}>
+      {/* ── Sticky Search Header ── */}
       <PropertySearchHeader
         keyword={filters.keyword}
         onKeywordChange={(val) => applyFilters({ ...filters, keyword: val })}
@@ -451,68 +458,73 @@ export const PropertyListPage = () => {
         onOpenFilterModal={() => setIsFilterModalOpen(true)}
       />
 
-      <div className="w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
-          {/* Left Column */}
-          <div className="lg:col-span-7 flex flex-col gap-4 min-w-0">
-            
-            {/* Toolbar */}
-            <div className="bg-white dark:bg-[#151518] p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs flex flex-col gap-3">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div>
-                  <h1 className="text-[16px] font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
-                    <span>Danh sách bất động sản</span>
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white">
-                      {filteredProperties.length} kết quả
-                    </span>
-                  </h1>
-                </div>
+      {/* ── Split-screen body: left column is 3-zone, right map is pinned ── */}
+      <div className="flex-1 flex gap-4 min-h-0">
 
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center p-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60">
-                    <button
-                      onClick={() => setViewMode("grid")}
-                      className={`p-1.5 rounded-lg transition-all ${
-                        viewMode === "grid" ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-xs" : "text-zinc-400"
-                      }`}
-                      title="Chế độ lưới"
-                    >
-                      <LayoutGrid className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => setViewMode("list")}
-                      className={`p-1.5 rounded-lg transition-all ${
-                        viewMode === "list" ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-xs" : "text-zinc-400"
-                      }`}
-                      title="Chế độ danh sách"
-                    >
-                      <List className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <CustomSelect options={sortOptions} value={sortBy} onChange={setSortBy} className="w-44 text-[12px]" />
-                </div>
+        {/* ── Left Column: toolbar (fixed) | cards (scroll) | pagination (fixed) ── */}
+        <div className="flex-1 min-w-0 flex flex-col">
+
+          {/* ① Toolbar — always visible, never scrolls */}
+          <div className="shrink-0 bg-white dark:bg-[#151518] p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs flex flex-col gap-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <h1 className="text-[16px] font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <span>Danh sách bất động sản</span>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white">
+                    {filteredProperties.length} kết quả
+                  </span>
+                </h1>
               </div>
 
-              {activeTagsSummary.length > 0 && (
-                <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-zinc-100 dark:border-zinc-800/80">
-                  <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mr-1">Đang lọc:</span>
-                  {activeTagsSummary.map((tag, idx) => (
-                    <span key={idx} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11.5px] font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200/80 dark:border-zinc-700/80">
-                      {tag}
-                    </span>
-                  ))}
-                  <button onClick={resetFilters} className="flex items-center gap-1 text-[11.5px] font-bold text-rose-500 hover:text-rose-600 ml-auto transition-colors">
-                    <RotateCcw className="w-3 h-3" />
-                    Xóa lọc
+              <div className="flex items-center gap-2">
+                <div className="flex items-center p-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60">
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={`p-1.5 rounded-lg transition-all ${
+                      viewMode === "grid" ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-xs" : "text-zinc-400"
+                    }`}
+                    title="Chế độ lưới"
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("list")}
+                    className={`p-1.5 rounded-lg transition-all ${
+                      viewMode === "list" ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-xs" : "text-zinc-400"
+                    }`}
+                    title="Chế độ danh sách"
+                  >
+                    <List className="w-4 h-4" />
                   </button>
                 </div>
-              )}
+                <CustomSelect options={sortOptions} value={sortBy} onChange={setSortBy} className="w-44 text-[12px]" />
+              </div>
             </div>
 
-            {/* Empty State */}
+            {activeTagsSummary.length > 0 && (
+              <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-zinc-100 dark:border-zinc-800/80">
+                <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mr-1">Đang lọc:</span>
+                {activeTagsSummary.map((tag, idx) => (
+                  <span key={idx} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11.5px] font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200/80 dark:border-zinc-700/80">
+                    {tag}
+                  </span>
+                ))}
+                <button onClick={resetFilters} className="flex items-center gap-1 text-[11.5px] font-bold text-rose-500 hover:text-rose-600 ml-auto transition-colors">
+                  <RotateCcw className="w-3 h-3" />
+                  Xóa lọc
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* ② Cards area — only this zone scrolls */}
+          <div
+            ref={cardsScrollRef}
+            className="flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden"
+            style={{ scrollbarWidth: "none" } as React.CSSProperties}
+          >
             {filteredProperties.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 bg-white dark:bg-[#151518] rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 text-center p-8 shadow-xs">
+              <div className="flex flex-col items-center justify-center py-16 bg-white dark:bg-[#151518] rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 text-center p-8 shadow-xs h-full">
                 <div className="w-14 h-14 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-3">
                   <Search className="w-7 h-7 text-zinc-400" />
                 </div>
@@ -521,7 +533,7 @@ export const PropertyListPage = () => {
                 <Button onClick={resetFilters} className="rounded-full px-6 font-bold">Xóa tất cả điều kiện lọc</Button>
               </div>
             ) : (
-              <div className={`grid gap-4 ${viewMode === "grid" ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
+              <div className={`grid gap-3.5 p-2.5 pt-6 pb-6 ${viewMode === "grid" ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
                 {paginatedProperties.map((property) =>
                   viewMode === "grid" ? (
                     <PropertyGridCard
@@ -545,28 +557,39 @@ export const PropertyListPage = () => {
                 )}
               </div>
             )}
+          </div>
 
-            {/* Pagination */}
+          {/* ③ Pagination & CompareBar Container */}
+          <div className="shrink-0 flex flex-col gap-2.5">
+            {compareProperties.length > 0 && (
+              <CompareBar
+                selectedProperties={compareProperties}
+                onRemove={(id) => setCompareIds((prev) => prev.filter((i) => i !== id))}
+                onClear={() => setCompareIds([])}
+              />
+            )}
+
             {filteredProperties.length > 0 && (
-              <div className="flex items-center justify-between bg-white dark:bg-[#151518] p-4 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs mt-2">
+              <div className="flex items-center justify-between bg-white dark:bg-[#151518] p-3.5 rounded-2xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs">
                 <span className="text-[12.5px] font-medium text-zinc-500">
                   Trang <span className="font-bold text-zinc-900 dark:text-white">{currentPage}</span> / {totalPages}
                 </span>
                 <div className="flex items-center gap-1.5">
                   <button
                     disabled={currentPage === 1}
-                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                    onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
                     className="w-8 h-8 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-600 dark:text-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                    title="Trang trước"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => i + 1).map((pg) => (
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => (
                     <button
                       key={pg}
-                      onClick={() => setCurrentPage(pg)}
+                      onClick={() => handlePageChange(pg)}
                       className={`w-8 h-8 rounded-xl text-[12.5px] font-bold transition-all ${
                         currentPage === pg
-                          ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 shadow-md"
+                          ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 shadow-md scale-105"
                           : "border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                       }`}
                     >
@@ -575,8 +598,9 @@ export const PropertyListPage = () => {
                   ))}
                   <button
                     disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                    onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
                     className="w-8 h-8 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-600 dark:text-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                    title="Trang sau"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -584,18 +608,19 @@ export const PropertyListPage = () => {
               </div>
             )}
           </div>
-
-          {/* Right Column: Map */}
-          <div className="lg:col-span-5 hidden lg:block sticky top-20">
-            <PropertyMap
-              properties={filteredProperties}
-              selectedCity={filters.city}
-              selectedDistrict={filters.district}
-              hoveredPropertyId={hoveredPropertyId}
-              onSelectProperty={(id) => setHoveredPropertyId(id)}
-            />
-          </div>
         </div>
+
+        {/* Right Column: Map — pinned, slightly smaller */}
+        <div className="hidden lg:flex w-[38%] xl:w-[40%] shrink-0 h-full">
+          <PropertyMap
+            properties={filteredProperties}
+            selectedCity={filters.city}
+            selectedDistrict={filters.district}
+            hoveredPropertyId={hoveredPropertyId}
+            onSelectProperty={(id) => setHoveredPropertyId(id)}
+          />
+        </div>
+
       </div>
 
       <PropertyFilterModal
@@ -605,12 +630,6 @@ export const PropertyListPage = () => {
         onApplyFilters={applyFilters}
         onResetFilters={resetFilters}
         filteredCount={filteredProperties.length}
-      />
-
-      <CompareBar
-        selectedProperties={compareProperties}
-        onRemove={(id) => setCompareIds((prev) => prev.filter((i) => i !== id))}
-        onClear={() => setCompareIds([])}
       />
     </div>
   );

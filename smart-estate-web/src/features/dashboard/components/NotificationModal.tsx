@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Bell,
   X,
@@ -18,7 +18,6 @@ interface Notification {
   body: string;
   time: string;
   read: boolean;
-  avatar?: string;
 }
 
 const MOCK_NOTIFICATIONS: Notification[] = [
@@ -34,7 +33,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
     id: "n2",
     type: "property",
     title: "Tin đăng đã được duyệt",
-    body: "Tin đăng \"Căn hộ 2PN Vinhomes Grand Park\" của bạn đã được phê duyệt và hiển thị.",
+    body: "Tin đăng \"Căn hộ 2PN Vinhomes Grand Park\" của bạn đã được phê duyệt.",
     time: "15 phút trước",
     read: false,
   },
@@ -42,7 +41,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
     id: "n3",
     type: "payment",
     title: "Thanh toán thành công",
-    body: "Gói đăng tin Cơ bản 30 ngày — 299.000đ đã được xử lý thành công.",
+    body: "Gói đăng tin Cơ bản 30 ngày — 299.000đ đã xử lý thành công.",
     time: "1 giờ trước",
     read: false,
   },
@@ -62,22 +61,14 @@ const MOCK_NOTIFICATIONS: Notification[] = [
     time: "5 giờ trước",
     read: true,
   },
-  {
-    id: "n6",
-    type: "system",
-    title: "Cập nhật hệ thống",
-    body: "SmartEstate vừa nâng cấp tính năng tìm kiếm AI. Khám phá ngay!",
-    time: "1 ngày trước",
-    read: true,
-  },
 ];
 
 const ICON_MAP = {
-  property: { icon: Home, color: "#8b5cf6", bg: "#f5f3ff" },
-  payment: { icon: CreditCard, color: "#10b981", bg: "#ecfdf5" },
-  message: { icon: MessageCircle, color: "#3b82f6", bg: "#eff6ff" },
-  promotion: { icon: Tag, color: "#f59e0b", bg: "#fffbeb" },
-  system: { icon: Info, color: "#6b7280", bg: "#f9fafb" },
+  property: Home,
+  payment: CreditCard,
+  message: MessageCircle,
+  promotion: Tag,
+  system: Info,
 };
 
 interface NotificationModalProps {
@@ -92,7 +83,22 @@ export const NotificationModal = ({
   anchorRef,
 }: NotificationModalProps) => {
   const modalRef = useRef<HTMLDivElement>(null);
-  const unreadCount = MOCK_NOTIFICATIONS.filter((n) => !n.read).length;
+  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const [pos, setPos] = useState<{ top: number; right: number }>({ top: 76, right: 16 });
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  // Reposition modal relative to anchorRef
+  useEffect(() => {
+    if (!open) return;
+    if (anchorRef?.current) {
+      const rect = anchorRef.current.getBoundingClientRect();
+      setPos({
+        top: rect.bottom + 10,
+        right: Math.max(16, window.innerWidth - rect.right),
+      });
+    }
+  }, [open, anchorRef]);
 
   // Close on click outside
   useEffect(() => {
@@ -114,35 +120,47 @@ export const NotificationModal = ({
 
   if (!open) return null;
 
+  const markAllRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
   return (
     <div
       ref={modalRef}
       className={cn(
-        "fixed z-[600] w-[360px] max-h-[520px] flex flex-col",
-        "right-4 top-[76px]",
-        "bg-white dark:bg-[#151518] border border-zinc-200/80 dark:border-zinc-800/80",
-        "rounded-3xl shadow-2xl overflow-hidden"
+        "fixed z-[600] w-[360px] max-h-[500px] flex flex-col",
+        "bg-white dark:bg-[#141417] border border-zinc-200/80 dark:border-zinc-800/80",
+        "rounded-3xl shadow-2xl overflow-hidden backdrop-blur-2xl"
       )}
-      style={{ animation: "slideInDown 0.2s ease" }}
+      style={{
+        top: `${pos.top}px`,
+        right: `${pos.right}px`,
+        animation: "slideInDown 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+      }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 dark:border-zinc-800/80">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-zinc-100 dark:border-zinc-800/80">
         <div className="flex items-center gap-2.5">
-          <Bell className="w-4.5 h-4.5 text-zinc-900 dark:text-white" />
+          <Bell className="w-4 h-4 text-zinc-900 dark:text-white" />
           <span className="text-[14px] font-extrabold text-zinc-900 dark:text-white">
             Thông báo
           </span>
           {unreadCount > 0 && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500 text-white">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white">
               {unreadCount} mới
             </span>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-1 text-[11px] font-bold text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">
-            <CheckCheck className="w-3.5 h-3.5" />
-            Đọc tất cả
-          </button>
+          {unreadCount > 0 && (
+            <button
+              onClick={markAllRead}
+              className="flex items-center gap-1 text-[11px] font-bold text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+            >
+              <CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
+              Đã đọc
+            </button>
+          )}
           <button
             onClick={onClose}
             className="w-7 h-7 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
@@ -153,24 +171,26 @@ export const NotificationModal = ({
       </div>
 
       {/* Notification List */}
-      <div className="overflow-y-auto flex-1 divide-y divide-zinc-50 dark:divide-zinc-800/60">
-        {MOCK_NOTIFICATIONS.map((notif) => {
-          const { icon: Icon, color, bg } = ICON_MAP[notif.type];
+      <div className="overflow-y-auto flex-1 divide-y divide-zinc-100/60 dark:divide-zinc-800/60">
+        {notifications.map((notif) => {
+          const Icon = ICON_MAP[notif.type] || Info;
           return (
             <button
               key={notif.id}
+              onClick={() => {
+                setNotifications((prev) =>
+                  prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n))
+                );
+              }}
               className={cn(
-                "w-full text-left flex items-start gap-3 px-4 py-3.5 transition-colors",
-                "hover:bg-zinc-50 dark:hover:bg-zinc-800/40",
-                !notif.read && "bg-blue-50/50 dark:bg-blue-900/10"
+                "w-full text-left flex items-start gap-3 px-4 py-3 transition-colors",
+                "hover:bg-zinc-50 dark:hover:bg-zinc-800/50",
+                !notif.read ? "bg-zinc-100/50 dark:bg-zinc-800/40" : "bg-transparent"
               )}
             >
-              {/* Icon */}
-              <div
-                className="w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 mt-0.5"
-                style={{ background: bg }}
-              >
-                <Icon className="w-4.5 h-4.5" style={{ color }} />
+              {/* Icon Chip */}
+              <div className="w-8.5 h-8.5 rounded-2xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60 flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                <Icon className="w-4 h-4 text-zinc-800 dark:text-zinc-200" />
               </div>
 
               {/* Content */}
@@ -180,14 +200,14 @@ export const NotificationModal = ({
                     className={cn(
                       "text-[12.5px] font-bold truncate",
                       notif.read
-                        ? "text-zinc-700 dark:text-zinc-300"
-                        : "text-zinc-900 dark:text-white"
+                        ? "text-zinc-600 dark:text-zinc-400 font-medium"
+                        : "text-zinc-950 dark:text-white font-extrabold"
                     )}
                   >
                     {notif.title}
                   </span>
                   {!notif.read && (
-                    <div className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                    <div className="w-2 h-2 rounded-full bg-rose-500 shrink-0 animate-pulse" />
                   )}
                 </div>
                 <p className="text-[11.5px] text-zinc-400 dark:text-zinc-500 line-clamp-2 mt-0.5 leading-relaxed">
@@ -203,15 +223,15 @@ export const NotificationModal = ({
       </div>
 
       {/* Footer */}
-      <div className="px-4 py-3 border-t border-zinc-100 dark:border-zinc-800/80">
-        <button className="w-full py-2 rounded-xl text-[12px] font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+      <div className="px-4 py-3 border-t border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/50">
+        <button className="w-full py-2 rounded-xl text-[12px] font-extrabold text-zinc-900 dark:text-white bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors shadow-xs">
           Xem tất cả thông báo
         </button>
       </div>
 
       <style>{`
         @keyframes slideInDown {
-          from { opacity: 0; transform: translateY(-10px) scale(0.97); }
+          from { opacity: 0; transform: translateY(-8px) scale(0.97); }
           to   { opacity: 1; transform: translateY(0) scale(1); }
         }
       `}</style>
